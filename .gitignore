@@ -1,0 +1,7 @@
+.env
+*.env.local
+traefik/acme.json
+metabase/traefik/acme.json
+*.swp
+*.swo
+.DS_Store

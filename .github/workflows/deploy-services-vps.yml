@@ -1,0 +1,73 @@
+name: Deploy Services VPS
+
+# Déploie Traefik (reverse proxy partagé) puis la stack monitoring
+# (Prometheus + Grafana + Bugsink + node-exporter) sur le VPS-1 Services.
+# Les .env sont générés sur le runner à partir des secrets/variables GitHub,
+# puis synchronisés sur le VPS ; aucun secret n'est stocké dans le repo.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "traefik/**"
+      - "monitoring/**"
+      - ".github/workflows/deploy-services-vps.yml"
+
+concurrency: deploy-services-vps
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ci
+          chmod 600 ~/.ssh/id_ci
+          echo "${{ vars.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Generate .env files
+        run: |
+          cat > traefik/.env <<'EOF'
+          ACME_EMAIL=${{ vars.ACME_EMAIL }}
+          EOF
+          cat > monitoring/.env <<'EOF'
+          GRAFANA_DOMAIN=${{ vars.GRAFANA_DOMAIN }}
+          GRAFANA_ADMIN_USER=${{ vars.GRAFANA_ADMIN_USER }}
+          GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          BUGSINK_DOMAIN=${{ vars.BUGSINK_DOMAIN }}
+          BUGSINK_SECRET_KEY=${{ secrets.BUGSINK_SECRET_KEY }}
+          BUGSINK_DB_USER=${{ vars.BUGSINK_DB_USER }}
+          BUGSINK_DB_PASSWORD=${{ secrets.BUGSINK_DB_PASSWORD }}
+          BUGSINK_DB_NAME=${{ vars.BUGSINK_DB_NAME }}
+          EOF
+
+      - name: Sync files to VPS
+        env:
+          SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_SSH_PORT }}
+          DEST: ${{ vars.VPS_SSH_USER }}@${{ vars.VPS_HOST }}
+        run: |
+          # acme.json exclu : jamais écrasé/supprimé par --delete (préserve les certs)
+          rsync -az --delete --exclude '.git' --exclude 'acme.json' -e "$SSH" \
+            traefik/ "$DEST:~/cinestats-infra/traefik/"
+          rsync -az --delete --exclude '.git' -e "$SSH" \
+            monitoring/ "$DEST:~/cinestats-infra/monitoring/"
+
+      - name: Deploy on VPS
+        env:
+          SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_SSH_PORT }}
+          DEST: ${{ vars.VPS_SSH_USER }}@${{ vars.VPS_HOST }}
+        run: |
+          $SSH "$DEST" 'bash -s' <<'EOF'
+          set -euo pipefail
+          docker network inspect web >/dev/null 2>&1 || docker network create web
+          cd ~/cinestats-infra/traefik
+          [ -f acme.json ] || { touch acme.json && chmod 600 acme.json; }
+          docker compose -f docker-compose.yml up -d   # -f = ignore l'override dev
+          cd ~/cinestats-infra/monitoring
+          docker compose up -d
+          docker compose ps
+          EOF

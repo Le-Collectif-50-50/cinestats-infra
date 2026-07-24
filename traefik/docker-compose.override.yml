@@ -1,0 +1,18 @@
+services:
+  traefik:
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8080:8080"
+    environment:
+      - ACME_EMAIL=dev@localhost
+    volumes:
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:ro
+
+networks:
+  web:
+    external: false
+    driver: bridge
