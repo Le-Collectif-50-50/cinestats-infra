@@ -1,9 +1,9 @@
 name: Deploy Services VPS
 
-# Déploie Traefik (reverse proxy partagé) puis la stack monitoring
-# (Prometheus + Grafana + Bugsink + node-exporter) sur le VPS-1 Services.
-# Les .env sont générés sur le runner à partir des secrets/variables GitHub,
-# puis synchronisés sur le VPS ; aucun secret n'est stocké dans le repo.
+# Déploie Traefik (reverse proxy partagé), la stack monitoring
+# (Prometheus + Grafana + Bugsink + node-exporter) et Vaultwarden sur le VPS-1
+# Services. Les .env sont générés sur le runner à partir des secrets/variables
+# GitHub, puis synchronisés sur le VPS ; aucun secret n'est stocké dans le repo.
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ on:
     paths:
       - "traefik/**"
       - "monitoring/**"
+      - "vaultwarden/**"
       - ".github/workflows/deploy-services-vps.yml"
 
 concurrency: deploy-services-vps
@@ -45,18 +46,25 @@ jobs:
           BUGSINK_SUPERUSER_EMAIL=${{ vars.BUGSINK_SUPERUSER_EMAIL }}
           BUGSINK_SUPERUSER_PASSWORD=${{ secrets.BUGSINK_SUPERUSER_PASSWORD }}
           EOF
+          cat > vaultwarden/.env <<'EOF'
+          VAULTWARDEN_DOMAIN=${{ vars.VAULTWARDEN_DOMAIN }}
+          VAULTWARDEN_ADMIN_TOKEN=${{ secrets.VAULTWARDEN_ADMIN_TOKEN }}
+          VAULTWARDEN_SIGNUPS_ALLOWED=${{ vars.VAULTWARDEN_SIGNUPS_ALLOWED }}
+          EOF
 
       - name: Sync files to VPS
         env:
           SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_SSH_PORT }}
           DEST: ${{ vars.VPS_SSH_USER }}@${{ vars.VPS_HOST }}
         run: |
-          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/traefik ~/cinestats-infra/monitoring'
+          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/traefik ~/cinestats-infra/monitoring ~/cinestats-infra/vaultwarden'
           # acme.json exclu : jamais écrasé/supprimé par --delete (préserve les certs)
           rsync -az --delete --exclude '.git' --exclude 'acme.json' -e "$SSH" \
             traefik/ "$DEST:~/cinestats-infra/traefik/"
           rsync -az --delete --exclude '.git' -e "$SSH" \
             monitoring/ "$DEST:~/cinestats-infra/monitoring/"
+          rsync -az --delete --exclude '.git' -e "$SSH" \
+            vaultwarden/ "$DEST:~/cinestats-infra/vaultwarden/"
 
       - name: Deploy on VPS
         env:
@@ -70,6 +78,8 @@ jobs:
           [ -f acme.json ] || { touch acme.json && chmod 600 acme.json; }
           docker compose -f docker-compose.yml up -d   # -f = ignore l'override dev
           cd ~/cinestats-infra/monitoring
+          docker compose up -d
+          cd ~/cinestats-infra/vaultwarden
           docker compose up -d
           docker compose ps
           EOF
