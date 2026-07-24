@@ -65,7 +65,7 @@ services:
       - monitoring-internal
 
   bugsink:
-    image: bugsink/bugsink:0.16.0
+    image: bugsink/bugsink:2.5.0
     container_name: bugsink
     restart: unless-stopped
     depends_on:
@@ -75,8 +75,12 @@ services:
       - DATABASE_URL=postgres://${BUGSINK_DB_USER}:${BUGSINK_DB_PASSWORD}@bugsink-db:5432/${BUGSINK_DB_NAME}
       - SECRET_KEY=${BUGSINK_SECRET_KEY}
       - PORT=8000
+      - BASE_URL=https://${BUGSINK_DOMAIN}
+      - BEHIND_HTTPS_PROXY=True
+      - CREATE_SUPERUSER=${BUGSINK_SUPERUSER_EMAIL}:${BUGSINK_SUPERUSER_PASSWORD}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      # Host explicite : ALLOWED_HOSTS est dérivé de BASE_URL, localhost serait rejeté
+      test: ["CMD", "curl", "-f", "-H", "Host: ${BUGSINK_DOMAIN}", "http://localhost:8000/"]
       interval: 30s
       timeout: 5s
       retries: 3

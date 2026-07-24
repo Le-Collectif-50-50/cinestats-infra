@@ -43,6 +43,8 @@ jobs:
           BUGSINK_DB_USER=${{ vars.BUGSINK_DB_USER }}
           BUGSINK_DB_PASSWORD=${{ secrets.BUGSINK_DB_PASSWORD }}
           BUGSINK_DB_NAME=${{ vars.BUGSINK_DB_NAME }}
+          BUGSINK_SUPERUSER_EMAIL=${{ vars.BUGSINK_SUPERUSER_EMAIL }}
+          BUGSINK_SUPERUSER_PASSWORD=${{ secrets.BUGSINK_SUPERUSER_PASSWORD }}
           EOF
 
       - name: Sync files to VPS
