@@ -79,8 +79,9 @@ services:
       - BEHIND_HTTPS_PROXY=True
       - CREATE_SUPERUSER=${BUGSINK_SUPERUSER_EMAIL}:${BUGSINK_SUPERUSER_PASSWORD}
     healthcheck:
-      # Host explicite : ALLOWED_HOSTS est dérivé de BASE_URL, localhost serait rejeté
-      test: ["CMD", "curl", "-f", "-H", "Host: ${BUGSINK_DOMAIN}", "http://localhost:8000/"]
+      # curl/wget absents de l'image, et Traefik EXCLUT les conteneurs unhealthy :
+      # simple check TCP (python3, présent) que gunicorn écoute bien sur :8000.
+      test: ["CMD", "python3", "-c", "import socket; socket.create_connection(('localhost',8000),5).close()"]
       interval: 30s
       timeout: 5s
       retries: 3
