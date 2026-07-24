@@ -50,6 +50,7 @@ jobs:
           SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_SSH_PORT }}
           DEST: ${{ vars.VPS_SSH_USER }}@${{ vars.VPS_HOST }}
         run: |
+          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/traefik ~/cinestats-infra/monitoring'
           # acme.json exclu : jamais écrasé/supprimé par --delete (préserve les certs)
           rsync -az --delete --exclude '.git' --exclude 'acme.json' -e "$SSH" \
             traefik/ "$DEST:~/cinestats-infra/traefik/"
