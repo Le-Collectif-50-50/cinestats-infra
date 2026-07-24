@@ -12,6 +12,10 @@ services:
       - ./acme.json:/acme.json
     environment:
       - ACME_EMAIL=${ACME_EMAIL}
+      # Docker Engine 29.x impose une API >= 1.40 ; sans ce pin, le client Docker
+      # de Traefik retombe sur 1.24 (« client version 1.24 is too old ») et le
+      # provider Docker ne démarre pas (pas de routage, pas d'ACME).
+      - DOCKER_API_VERSION=1.44
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 30s
