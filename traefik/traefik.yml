@@ -23,7 +23,10 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: ${ACME_EMAIL}
+      # Traefik ne substitue PAS les variables d'env dans ce fichier statique :
+      # l'email doit être écrit en clair (ce n'est pas un secret, juste le contact
+      # Let's Encrypt). Pour le changer, éditer cette ligne.
+      email: admin@cinestats5050.fr
       storage: /acme.json
       httpChallenge:
         entryPoint: web

@@ -31,9 +31,8 @@ jobs:
 
       - name: Generate .env files
         run: |
-          cat > traefik/.env <<'EOF'
-          ACME_EMAIL=${{ vars.ACME_EMAIL }}
-          EOF
+          # Traefik n'a plus besoin de .env (email en dur dans traefik.yml,
+          # DOCKER_SOCK a une valeur par défaut dans le compose).
           cat > monitoring/.env <<'EOF'
           GRAFANA_DOMAIN=${{ vars.GRAFANA_DOMAIN }}
           GRAFANA_ADMIN_USER=${{ vars.GRAFANA_ADMIN_USER }}

@@ -11,7 +11,6 @@ services:
       - ./traefik.yml:/traefik.yml:ro
       - ./acme.json:/acme.json
     environment:
-      - ACME_EMAIL=${ACME_EMAIL}
       # Docker Engine 29.x impose une API >= 1.40. Le client Docker de Traefik
       # (v3.7+) négocie correctement ; ce pin explicite reste un filet de sécurité
       # (1.44 est dans la plage supportée par le daemon 1.40–1.55).
