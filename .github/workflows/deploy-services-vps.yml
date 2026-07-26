@@ -1,9 +1,9 @@
 name: Deploy Services VPS
 
 # Déploie Traefik (reverse proxy partagé), la stack monitoring
-# (Prometheus + Grafana + Bugsink + node-exporter) et Vaultwarden sur le VPS-1
-# Services. Les .env sont générés sur le runner à partir des secrets/variables
-# GitHub, puis synchronisés sur le VPS ; aucun secret n'est stocké dans le repo.
+# (Prometheus + Grafana + Bugsink + node-exporter), Vaultwarden et Authentik (SSO)
+# sur le VPS-1 Services. Les .env sont générés sur le runner à partir des
+# secrets/variables GitHub, puis synchronisés sur le VPS ; aucun secret dans le repo.
 
 on:
   workflow_dispatch:
@@ -13,6 +13,7 @@ on:
       - "traefik/**"
       - "monitoring/**"
       - "vaultwarden/**"
+      - "authentik/**"
       - ".github/workflows/deploy-services-vps.yml"
 
 concurrency: deploy-services-vps
@@ -57,13 +58,22 @@ jobs:
           SMTP_USERNAME=${{ vars.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           EOF
+          cat > authentik/.env <<'EOF'
+          AUTHENTIK_DOMAIN=${{ vars.AUTHENTIK_DOMAIN }}
+          AUTHENTIK_SECRET_KEY=${{ secrets.AUTHENTIK_SECRET_KEY }}
+          AUTHENTIK_DB_USER=${{ vars.AUTHENTIK_DB_USER }}
+          AUTHENTIK_DB_PASSWORD=${{ secrets.AUTHENTIK_DB_PASSWORD }}
+          AUTHENTIK_DB_NAME=${{ vars.AUTHENTIK_DB_NAME }}
+          AUTHENTIK_BOOTSTRAP_EMAIL=${{ vars.AUTHENTIK_BOOTSTRAP_EMAIL }}
+          AUTHENTIK_BOOTSTRAP_PASSWORD=${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
+          EOF
 
       - name: Sync files to VPS
         env:
           SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_SSH_PORT }}
           DEST: ${{ vars.VPS_SSH_USER }}@${{ vars.VPS_HOST }}
         run: |
-          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/traefik ~/cinestats-infra/monitoring ~/cinestats-infra/vaultwarden'
+          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/traefik ~/cinestats-infra/monitoring ~/cinestats-infra/vaultwarden ~/cinestats-infra/authentik'
           # acme.json exclu : jamais écrasé/supprimé par --delete (préserve les certs)
           rsync -az --delete --exclude '.git' --exclude 'acme.json' -e "$SSH" \
             traefik/ "$DEST:~/cinestats-infra/traefik/"
@@ -71,6 +81,8 @@ jobs:
             monitoring/ "$DEST:~/cinestats-infra/monitoring/"
           rsync -az --delete --exclude '.git' -e "$SSH" \
             vaultwarden/ "$DEST:~/cinestats-infra/vaultwarden/"
+          rsync -az --delete --exclude '.git' -e "$SSH" \
+            authentik/ "$DEST:~/cinestats-infra/authentik/"
 
       - name: Deploy on VPS
         env:
@@ -86,6 +98,8 @@ jobs:
           cd ~/cinestats-infra/monitoring
           docker compose up -d
           cd ~/cinestats-infra/vaultwarden
+          docker compose up -d
+          cd ~/cinestats-infra/authentik
           docker compose up -d
           docker compose ps
           EOF
