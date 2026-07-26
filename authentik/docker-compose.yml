@@ -30,6 +30,8 @@ services:
       # OIDC clients (résolus par les blueprints via !Env)
       - AUTHENTIK_GRAFANA_CLIENT_ID=${AUTHENTIK_GRAFANA_CLIENT_ID}
       - AUTHENTIK_GRAFANA_CLIENT_SECRET=${AUTHENTIK_GRAFANA_CLIENT_SECRET}
+      - AUTHENTIK_VW_CLIENT_ID=${AUTHENTIK_VW_CLIENT_ID}
+      - AUTHENTIK_VW_CLIENT_SECRET=${AUTHENTIK_VW_CLIENT_SECRET}
     volumes:
       - ./blueprints:/blueprints/custom:ro
     healthcheck:
@@ -87,6 +89,8 @@ services:
       # OIDC clients (résolus par les blueprints via !Env)
       - AUTHENTIK_GRAFANA_CLIENT_ID=${AUTHENTIK_GRAFANA_CLIENT_ID}
       - AUTHENTIK_GRAFANA_CLIENT_SECRET=${AUTHENTIK_GRAFANA_CLIENT_SECRET}
+      - AUTHENTIK_VW_CLIENT_ID=${AUTHENTIK_VW_CLIENT_ID}
+      - AUTHENTIK_VW_CLIENT_SECRET=${AUTHENTIK_VW_CLIENT_SECRET}
     volumes:
       - ./blueprints:/blueprints/custom:ro
     healthcheck:

@@ -1,0 +1,65 @@
+# Blueprint Authentik — Provider OAuth2/OIDC + Application pour Vaultwarden.
+# Le scope "email" est un mapping CUSTOM (force email_verified=true) car
+# Vaultwarden l'exige (cf. guide d'intégration officiel authentik).
+version: 1
+metadata:
+  name: cinestats-vaultwarden-oauth
+entries:
+  - model: authentik_providers_oauth2.scopemapping
+    id: sm-vw-email
+    identifiers:
+      name: vaultwarden-email
+    attrs:
+      name: vaultwarden-email
+      scope_name: email
+      description: "Vaultwarden — email + email_verified forcé à true"
+      expression: |
+        return {"email": request.user.email, "email_verified": True}
+  - model: authentik_providers_oauth2.oauth2provider
+    id: provider-vaultwarden
+    identifiers:
+      name: vaultwarden
+    attrs:
+      name: vaultwarden
+      client_type: confidential
+      client_id: !Env [AUTHENTIK_VW_CLIENT_ID, ""]
+      client_secret: !Env [AUTHENTIK_VW_CLIENT_SECRET, ""]
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      signing_key:
+        !Find [
+          authentik_crypto.certificatekeypair,
+          [name, authentik Self-signed Certificate],
+        ]
+      redirect_uris:
+        - matching_mode: strict
+          url: https://vault.cinestats5050.fr/identity/connect/oidc-signin
+      property_mappings:
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-openid],
+          ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-profile],
+          ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-offline_access],
+          ]
+        - !KeyOf sm-vw-email
+  - model: authentik_core.application
+    id: app-vaultwarden
+    identifiers:
+      slug: vaultwarden
+    attrs:
+      name: Vaultwarden
+      slug: vaultwarden
+      provider: !KeyOf provider-vaultwarden
+      meta_launch_url: https://vault.cinestats5050.fr
+      meta_description: Gestionnaire de secrets Vaultwarden

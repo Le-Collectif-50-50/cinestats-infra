@@ -59,6 +59,8 @@ jobs:
           SMTP_FROM=${{ vars.SMTP_FROM }}
           SMTP_USERNAME=${{ vars.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          AUTHENTIK_VW_CLIENT_ID=${{ vars.AUTHENTIK_VW_CLIENT_ID }}
+          AUTHENTIK_VW_CLIENT_SECRET=${{ secrets.AUTHENTIK_VW_CLIENT_SECRET }}
           EOF
           cat > authentik/.env <<'EOF'
           AUTHENTIK_DOMAIN=${{ vars.AUTHENTIK_DOMAIN }}
@@ -77,6 +79,8 @@ jobs:
           AUTHENTIK_EMAIL__FROM=${{ vars.SMTP_FROM }}
           AUTHENTIK_GRAFANA_CLIENT_ID=${{ vars.AUTHENTIK_GRAFANA_CLIENT_ID }}
           AUTHENTIK_GRAFANA_CLIENT_SECRET=${{ secrets.AUTHENTIK_GRAFANA_CLIENT_SECRET }}
+          AUTHENTIK_VW_CLIENT_ID=${{ vars.AUTHENTIK_VW_CLIENT_ID }}
+          AUTHENTIK_VW_CLIENT_SECRET=${{ secrets.AUTHENTIK_VW_CLIENT_SECRET }}
           EOF
 
       - name: Sync files to VPS
