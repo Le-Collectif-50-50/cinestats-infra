@@ -46,6 +46,8 @@ jobs:
           BUGSINK_DB_NAME=${{ vars.BUGSINK_DB_NAME }}
           BUGSINK_SUPERUSER_EMAIL=${{ vars.BUGSINK_SUPERUSER_EMAIL }}
           BUGSINK_SUPERUSER_PASSWORD=${{ secrets.BUGSINK_SUPERUSER_PASSWORD }}
+          AUTHENTIK_GRAFANA_CLIENT_ID=${{ vars.AUTHENTIK_GRAFANA_CLIENT_ID }}
+          AUTHENTIK_GRAFANA_CLIENT_SECRET=${{ secrets.AUTHENTIK_GRAFANA_CLIENT_SECRET }}
           EOF
           cat > vaultwarden/.env <<'EOF'
           VAULTWARDEN_DOMAIN=${{ vars.VAULTWARDEN_DOMAIN }}
@@ -73,6 +75,8 @@ jobs:
           AUTHENTIK_EMAIL__USE_TLS=true
           AUTHENTIK_EMAIL__USE_SSL=false
           AUTHENTIK_EMAIL__FROM=${{ vars.SMTP_FROM }}
+          AUTHENTIK_GRAFANA_CLIENT_ID=${{ vars.AUTHENTIK_GRAFANA_CLIENT_ID }}
+          AUTHENTIK_GRAFANA_CLIENT_SECRET=${{ secrets.AUTHENTIK_GRAFANA_CLIENT_SECRET }}
           EOF
 
       - name: Sync files to VPS

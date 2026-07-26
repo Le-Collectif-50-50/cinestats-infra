@@ -1,0 +1,63 @@
+# Blueprint Authentik — Provider OAuth2/OIDC + Application pour Grafana.
+# Appliqué automatiquement par le worker Authentik (dossier /blueprints/custom).
+# Les client_id / client_secret viennent des variables d'environnement du
+# conteneur (injectées depuis les secrets GitHub via le .env généré en CI).
+version: 1
+metadata:
+  name: cinestats-grafana-oauth
+entries:
+  - model: authentik_providers_oauth2.oauth2provider
+    id: provider-grafana
+    identifiers:
+      name: grafana
+    attrs:
+      name: grafana
+      client_type: confidential
+      client_id: !Env [AUTHENTIK_GRAFANA_CLIENT_ID, ""]
+      client_secret: !Env [AUTHENTIK_GRAFANA_CLIENT_SECRET, ""]
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      signing_key:
+        !Find [
+          authentik_crypto.certificatekeypair,
+          [name, authentik Self-signed Certificate],
+        ]
+      redirect_uris:
+        - matching_mode: strict
+          url: https://grafana.cinestats5050.fr/login/generic_oauth
+      property_mappings:
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-openid],
+          ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-email],
+          ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-profile],
+          ]
+  - model: authentik_core.group
+    id: group-grafana-admins
+    identifiers:
+      name: Grafana Admins
+    attrs:
+      name: Grafana Admins
+      users:
+        - !Find [authentik_core.user, [username, akadmin]]
+  - model: authentik_core.application
+    id: app-grafana
+    identifiers:
+      slug: grafana
+    attrs:
+      name: Grafana
+      slug: grafana
+      provider: !KeyOf provider-grafana
+      meta_launch_url: https://grafana.cinestats5050.fr
+      meta_description: Monitoring — dashboards Grafana

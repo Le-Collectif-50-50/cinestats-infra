@@ -27,6 +27,11 @@ services:
       - AUTHENTIK_EMAIL__USE_TLS=${AUTHENTIK_EMAIL__USE_TLS}
       - AUTHENTIK_EMAIL__USE_SSL=${AUTHENTIK_EMAIL__USE_SSL}
       - AUTHENTIK_EMAIL__FROM=${AUTHENTIK_EMAIL__FROM}
+      # OIDC clients (résolus par les blueprints via !Env)
+      - AUTHENTIK_GRAFANA_CLIENT_ID=${AUTHENTIK_GRAFANA_CLIENT_ID}
+      - AUTHENTIK_GRAFANA_CLIENT_SECRET=${AUTHENTIK_GRAFANA_CLIENT_SECRET}
+    volumes:
+      - ./blueprints:/blueprints/custom:ro
     healthcheck:
       test: ["CMD", "ak", "healthcheck"]
       interval: 30s
@@ -79,6 +84,11 @@ services:
       - AUTHENTIK_EMAIL__USE_TLS=${AUTHENTIK_EMAIL__USE_TLS}
       - AUTHENTIK_EMAIL__USE_SSL=${AUTHENTIK_EMAIL__USE_SSL}
       - AUTHENTIK_EMAIL__FROM=${AUTHENTIK_EMAIL__FROM}
+      # OIDC clients (résolus par les blueprints via !Env)
+      - AUTHENTIK_GRAFANA_CLIENT_ID=${AUTHENTIK_GRAFANA_CLIENT_ID}
+      - AUTHENTIK_GRAFANA_CLIENT_SECRET=${AUTHENTIK_GRAFANA_CLIENT_SECRET}
+    volumes:
+      - ./blueprints:/blueprints/custom:ro
     healthcheck:
       test: ["CMD", "ak", "healthcheck"]
       interval: 30s
