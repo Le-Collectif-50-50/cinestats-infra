@@ -66,6 +66,13 @@ jobs:
           AUTHENTIK_DB_NAME=${{ vars.AUTHENTIK_DB_NAME }}
           AUTHENTIK_BOOTSTRAP_EMAIL=${{ vars.AUTHENTIK_BOOTSTRAP_EMAIL }}
           AUTHENTIK_BOOTSTRAP_PASSWORD=${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
+          AUTHENTIK_EMAIL__HOST=${{ vars.SMTP_HOST }}
+          AUTHENTIK_EMAIL__PORT=${{ vars.SMTP_PORT }}
+          AUTHENTIK_EMAIL__USERNAME=${{ vars.SMTP_USERNAME }}
+          AUTHENTIK_EMAIL__PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          AUTHENTIK_EMAIL__USE_TLS=true
+          AUTHENTIK_EMAIL__USE_SSL=false
+          AUTHENTIK_EMAIL__FROM=${{ vars.SMTP_FROM }}
           EOF
 
       - name: Sync files to VPS
