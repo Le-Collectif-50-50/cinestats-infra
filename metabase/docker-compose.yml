@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.7.8
     container_name: metabase-traefik
     restart: unless-stopped
     ports:
@@ -11,7 +11,9 @@ services:
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/acme.json:/acme.json
     environment:
-      - ACME_EMAIL=${ACME_EMAIL}
+      # Docker Engine 29.x impose une API >= 1.40 (le client Traefik retomberait
+      # sinon sur 1.24). Pin explicite dans la plage supportée.
+      - DOCKER_API_VERSION=1.44
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 30s
@@ -79,6 +81,10 @@ services:
       - POSTGRES_USER=${MB_DB_USER}
       - POSTGRES_PASSWORD=${MB_DB_PASSWORD}
       - POSTGRES_DB=${MB_DB_NAME}
+    # Publié en loopback uniquement (jamais public) pour que postgres-exporter
+    # (réseau host) puisse s'y connecter via 127.0.0.1.
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - metabase-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -97,6 +103,54 @@ services:
         max-file: "3"
     networks:
       - metabase-internal
+
+  # --- Monitoring : exporters en réseau host pour que UFW gouverne les ports
+  # (Docker contournerait UFW sur des ports publiés). Scrapés par le Prometheus
+  # du VPS Services (UFW restreint 9100/9187 à son IP).
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${MB_DB_USER}:${MB_DB_PASSWORD}@127.0.0.1:5432/${MB_DB_NAME}?sslmode=disable
+    depends_on:
+      metabase-db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   metabase-db-data:

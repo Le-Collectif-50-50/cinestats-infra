@@ -1,0 +1,65 @@
+name: Deploy Metabase VPS
+
+# Déploie la stack metabase/ (Traefik dédié + Metabase + PostgreSQL interne
+# + node-exporter/postgres-exporter) sur le VPS-1 Metabase. Le .env est généré
+# sur le runner depuis les secrets/variables GitHub ; aucun secret dans le repo.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "metabase/**"
+      - ".github/workflows/deploy-metabase-vps.yml"
+
+concurrency: deploy-metabase-vps
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.VPS_METABASE_SSH_KEY }}" > ~/.ssh/id_ci
+          chmod 600 ~/.ssh/id_ci
+          echo "${{ vars.VPS_METABASE_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Generate .env
+        run: |
+          cat > metabase/.env <<'EOF'
+          METABASE_DOMAIN=${{ vars.METABASE_DOMAIN }}
+          MB_DB_USER=${{ vars.MB_DB_USER }}
+          MB_DB_PASSWORD=${{ secrets.MB_DB_PASSWORD }}
+          MB_DB_NAME=${{ vars.MB_DB_NAME }}
+          MB_EMBEDDING_SECRET_KEY=${{ secrets.MB_EMBEDDING_SECRET_KEY }}
+          EOF
+
+      - name: Sync files to VPS
+        env:
+          SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_METABASE_SSH_PORT }}
+          DEST: ${{ vars.VPS_METABASE_SSH_USER }}@${{ vars.VPS_METABASE_HOST }}
+        run: |
+          $SSH "$DEST" 'mkdir -p ~/cinestats-infra/metabase/traefik'
+          # acme.json exclu : jamais écrasé/supprimé par --delete (préserve les certs)
+          rsync -az --delete --exclude '.git' --exclude 'acme.json' -e "$SSH" \
+            metabase/ "$DEST:~/cinestats-infra/metabase/"
+
+      - name: Deploy on VPS
+        env:
+          SSH: ssh -i ~/.ssh/id_ci -p ${{ vars.VPS_METABASE_SSH_PORT }}
+          DEST: ${{ vars.VPS_METABASE_SSH_USER }}@${{ vars.VPS_METABASE_HOST }}
+          SERVICES_IP: ${{ vars.VPS_HOST }}
+        run: |
+          $SSH "$DEST" "SERVICES_IP='$SERVICES_IP' bash -s" <<'EOF'
+          set -euo pipefail
+          cd ~/cinestats-infra/metabase
+          [ -f traefik/acme.json ] || { touch traefik/acme.json && chmod 600 traefik/acme.json; }
+          docker compose -f docker-compose.yml up -d   # -f = ignore l'override dev
+          # UFW : exporters accessibles uniquement depuis le VPS Services (Prometheus)
+          sudo ufw allow from "$SERVICES_IP" to any port 9100 proto tcp
+          sudo ufw allow from "$SERVICES_IP" to any port 9187 proto tcp
+          docker compose -f docker-compose.yml ps
+          EOF
