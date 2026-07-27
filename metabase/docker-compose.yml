@@ -157,6 +157,9 @@ volumes:
 
 networks:
   web:
+    # Nom explicite = 'web' pour matcher providers.docker.network dans traefik.yml
+    # (sinon Compose le nomme 'metabase_web' et Traefik ne trouve pas le backend).
+    name: web
     driver: bridge
   metabase-internal:
     internal: true
