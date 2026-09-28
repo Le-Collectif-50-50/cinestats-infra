@@ -5,3 +5,4 @@ metabase/traefik/acme.json
 *.swp
 *.swo
 .DS_Store
+monitoring/prometheus/targets/

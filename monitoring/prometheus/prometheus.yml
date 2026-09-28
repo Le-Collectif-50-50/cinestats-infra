@@ -15,17 +15,14 @@ scrape_configs:
 
   # VPS Metabase — exporters en réseau host, joignables par IP publique
   # (UFW du VPS Metabase restreint 9100/9187 à l'IP de ce VPS Services).
+  # Cibles générées en CI depuis vars.VPS_METABASE_HOST (pas d'IP dans le repo).
   - job_name: "node-exporter-metabase"
-    static_configs:
-      - targets: ["193.70.43.234:9100"]
-        labels:
-          vps: metabase
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/node-exporter-metabase.yml"]
 
   - job_name: "postgres-exporter-metabase"
-    static_configs:
-      - targets: ["193.70.43.234:9187"]
-        labels:
-          vps: metabase
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/postgres-exporter-metabase.yml"]
 
   # Désactivé tant que la BDD prod (VPS-2) n'est pas provisionnée
   # (le service postgres-exporter est commenté dans docker-compose.yml).
