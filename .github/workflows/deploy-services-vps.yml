@@ -49,6 +49,18 @@ jobs:
           AUTHENTIK_GRAFANA_CLIENT_ID=${{ vars.AUTHENTIK_GRAFANA_CLIENT_ID }}
           AUTHENTIK_GRAFANA_CLIENT_SECRET=${{ secrets.AUTHENTIK_GRAFANA_CLIENT_SECRET }}
           EOF
+          # Cibles Prometheus du VPS Metabase (file_sd), IP hors repo
+          mkdir -p monitoring/prometheus/targets
+          cat > monitoring/prometheus/targets/node-exporter-metabase.yml <<'EOF'
+          - targets: ["${{ vars.VPS_METABASE_HOST }}:9100"]
+            labels:
+              vps: metabase
+          EOF
+          cat > monitoring/prometheus/targets/postgres-exporter-metabase.yml <<'EOF'
+          - targets: ["${{ vars.VPS_METABASE_HOST }}:9187"]
+            labels:
+              vps: metabase
+          EOF
           cat > vaultwarden/.env <<'EOF'
           VAULTWARDEN_DOMAIN=${{ vars.VAULTWARDEN_DOMAIN }}
           VAULTWARDEN_ADMIN_TOKEN=${{ secrets.VAULTWARDEN_ADMIN_TOKEN }}
