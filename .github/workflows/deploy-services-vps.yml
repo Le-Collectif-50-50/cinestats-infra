@@ -61,6 +61,18 @@ jobs:
             labels:
               vps: metabase
           EOF
+          # Cibles Prometheus des 3 VPS de prod CineStats (app, db, data)
+          cat > monitoring/prometheus/targets/node-exporter-prod.yml <<'EOF'
+          - targets: ["${{ vars.VPS_PROD_APP_HOST }}:9100"]
+            labels:
+              vps: prod-app
+          - targets: ["${{ vars.VPS_PROD_DB_HOST }}:9100"]
+            labels:
+              vps: prod-db
+          - targets: ["${{ vars.VPS_PROD_DATA_HOST }}:9100"]
+            labels:
+              vps: prod-data
+          EOF
           cat > vaultwarden/.env <<'EOF'
           VAULTWARDEN_DOMAIN=${{ vars.VAULTWARDEN_DOMAIN }}
           VAULTWARDEN_ADMIN_TOKEN=${{ secrets.VAULTWARDEN_ADMIN_TOKEN }}
