@@ -24,6 +24,13 @@ scrape_configs:
     file_sd_configs:
       - files: ["/etc/prometheus/targets/postgres-exporter-metabase.yml"]
 
+  # VPS de prod CineStats (app, db, data) — node-exporter installé par
+  # infra/vps/55-exporters.sh du repo CineStats, 9100 ouvert à l'IP de ce VPS
+  # Services seulement. Cibles générées en CI depuis vars.VPS_PROD_*_HOST.
+  - job_name: "node-exporter-prod"
+    file_sd_configs:
+      - files: ["/etc/prometheus/targets/node-exporter-prod.yml"]
+
   # Désactivé tant que la BDD prod (VPS-2) n'est pas provisionnée
   # (le service postgres-exporter est commenté dans docker-compose.yml).
   # - job_name: "postgres-exporter"
