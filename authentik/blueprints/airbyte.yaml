@@ -1,0 +1,74 @@
+# Blueprint Authentik — Airbyte (VPS data) derrière un proxy provider.
+# Airbyte OSS n'a pas de SSO : Authentik décide qui passe (groupe « Airbyte Admins »),
+# l'outpost proxy qui tourne sur le VPS data applique la décision et relaie vers
+# Airbyte (127.0.0.1:8000). Airbyte garde son propre mot de passe derrière.
+#
+# Après déploiement : Applications → Outposts → « airbyte-outpost » → « View Deployment
+# Info » donne le token à mettre dans AUTHENTIK_TOKEN de l'outpost (VPS data), puis
+# ajouter les personnes autorisées au groupe « Airbyte Admins ».
+version: 1
+metadata:
+  name: cinestats-airbyte-proxy
+entries:
+  - model: authentik_core.group
+    id: group-airbyte
+    identifiers:
+      name: Airbyte Admins
+    attrs:
+      name: Airbyte Admins
+
+  - model: authentik_providers_proxy.proxyprovider
+    id: provider-airbyte
+    identifiers:
+      name: airbyte
+    attrs:
+      name: airbyte
+      mode: proxy
+      external_host: https://airbyte.cinestats5050.fr
+      internal_host: http://127.0.0.1:8000
+      internal_host_ssl_validation: false
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-implicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: app-airbyte
+    identifiers:
+      slug: airbyte
+    attrs:
+      name: Airbyte
+      slug: airbyte
+      provider: !KeyOf provider-airbyte
+      meta_launch_url: https://airbyte.cinestats5050.fr
+      meta_description: Synchronisation des sources de données (VPS data)
+
+  # Seuls les membres du groupe peuvent ouvrir l'application.
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf app-airbyte
+      group: !KeyOf group-airbyte
+    attrs:
+      target: !KeyOf app-airbyte
+      group: !KeyOf group-airbyte
+      order: 0
+      negate: false
+      enabled: true
+      timeout: 30
+
+  # Outpost distant : tourne sur le VPS data (conteneur goauthentik/proxy) et se
+  # connecte à ce serveur Authentik. Aucune connexion de service Docker locale.
+  - model: authentik_outposts.outpost
+    id: outpost-airbyte
+    identifiers:
+      name: airbyte-outpost
+    attrs:
+      name: airbyte-outpost
+      type: proxy
+      providers:
+        - !KeyOf provider-airbyte
+      config:
+        authentik_host: https://auth.cinestats5050.fr
