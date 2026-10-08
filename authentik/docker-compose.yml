@@ -109,6 +109,11 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
+      # authentik-internal est internal:true (pas d'egress) ; le worker est le
+      # process qui envoie réellement les emails (tâches Celery), il lui faut
+      # 'web' pour atteindre smtp-relay.brevo.com. Sans ça, l'envoi d'email
+      # échoue silencieusement (c'est la cause du souci signalé par l'utilisateur).
+      - web
       - authentik-internal
 
   authentik-db:
