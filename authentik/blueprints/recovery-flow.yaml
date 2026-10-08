@@ -15,7 +15,10 @@ entries:
       name: Default recovery flow
       title: Reset your password
       designation: recovery
-      authentication: require_unauthenticated
+      # Pas require_unauthenticated (valeur de l'exemple) : en 2025.4, l'action
+      # admin "Email recovery link" planifie le flow avec la session de l'admin
+      # (connecté) => FlowNonApplicableException => 400.
+      authentication: none
   - identifiers:
       name: default-recovery-field-password
     id: prompt-field-password
