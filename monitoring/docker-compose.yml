@@ -56,6 +56,15 @@ services:
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(groups[*], 'Grafana Admins') && 'Admin' || 'Viewer'
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT=false
       - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true
+      # Email (Brevo) — mêmes identifiants SMTP que Vaultwarden/Authentik,
+      # pour les notifications d'alerte Grafana
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=${SMTP_HOST}:${SMTP_PORT}
+      - GF_SMTP_USER=${SMTP_USERNAME}
+      - GF_SMTP_PASSWORD=${SMTP_PASSWORD}
+      - GF_SMTP_FROM_ADDRESS=${SMTP_FROM}
+      - GF_SMTP_FROM_NAME=Grafana CineStats
+      - GF_SMTP_STARTTLS_POLICY=MandatoryStartTLS
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 30s
@@ -94,6 +103,13 @@ services:
       - BASE_URL=https://${BUGSINK_DOMAIN}
       - BEHIND_HTTPS_PROXY=True
       - CREATE_SUPERUSER=${BUGSINK_SUPERUSER_EMAIL}:${BUGSINK_SUPERUSER_PASSWORD}
+      # Email (Brevo) — notifications de nouvelles issues
+      - EMAIL_HOST=${SMTP_HOST}
+      - EMAIL_PORT=${SMTP_PORT}
+      - EMAIL_HOST_USER=${SMTP_USERNAME}
+      - EMAIL_HOST_PASSWORD=${SMTP_PASSWORD}
+      - EMAIL_USE_TLS=True
+      - DEFAULT_FROM_EMAIL=${SMTP_FROM}
     healthcheck:
       # curl/wget absents de l'image, et Traefik EXCLUT les conteneurs unhealthy :
       # simple check TCP (python3, présent) que gunicorn écoute bien sur :8000.

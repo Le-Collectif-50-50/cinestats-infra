@@ -48,6 +48,11 @@ jobs:
           BUGSINK_SUPERUSER_PASSWORD=${{ secrets.BUGSINK_SUPERUSER_PASSWORD }}
           AUTHENTIK_GRAFANA_CLIENT_ID=${{ vars.AUTHENTIK_GRAFANA_CLIENT_ID }}
           AUTHENTIK_GRAFANA_CLIENT_SECRET=${{ secrets.AUTHENTIK_GRAFANA_CLIENT_SECRET }}
+          SMTP_HOST=${{ vars.SMTP_HOST }}
+          SMTP_PORT=${{ vars.SMTP_PORT }}
+          SMTP_USERNAME=${{ vars.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM=${{ vars.SMTP_FROM }}
           EOF
           # Cibles Prometheus du VPS Metabase (file_sd), IP hors repo
           mkdir -p monitoring/prometheus/targets

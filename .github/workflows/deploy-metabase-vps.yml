@@ -35,6 +35,11 @@ jobs:
           MB_DB_PASSWORD=${{ secrets.MB_DB_PASSWORD }}
           MB_DB_NAME=${{ vars.MB_DB_NAME }}
           MB_EMBEDDING_SECRET_KEY=${{ secrets.MB_EMBEDDING_SECRET_KEY }}
+          SMTP_HOST=${{ vars.SMTP_HOST }}
+          SMTP_PORT=${{ vars.SMTP_PORT }}
+          SMTP_USERNAME=${{ vars.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM=${{ vars.SMTP_FROM }}
           EOF
 
       - name: Sync files to VPS

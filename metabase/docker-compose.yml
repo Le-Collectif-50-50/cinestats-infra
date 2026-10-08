@@ -47,6 +47,15 @@ services:
       - MB_DB_HOST=metabase-db
       - MB_SITE_URL=https://${METABASE_DOMAIN}
       - MB_EMBEDDING_SECRET_KEY=${MB_EMBEDDING_SECRET_KEY}
+      # Email (Brevo) — mêmes identifiants SMTP que Vaultwarden/Authentik/Grafana,
+      # pour les invitations et l'envoi de dashboards/alertes par email
+      - MB_EMAIL_SMTP_HOST=${SMTP_HOST}
+      - MB_EMAIL_SMTP_PORT=${SMTP_PORT}
+      - MB_EMAIL_SMTP_SECURITY=starttls
+      - MB_EMAIL_SMTP_USERNAME=${SMTP_USERNAME}
+      - MB_EMAIL_SMTP_PASSWORD=${SMTP_PASSWORD}
+      - MB_EMAIL_FROM_ADDRESS=${SMTP_FROM}
+      - MB_EMAIL_FROM_NAME=Metabase CineStats
       - JAVA_OPTS=-Xmx512m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
