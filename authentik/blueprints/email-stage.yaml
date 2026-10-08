@@ -1,11 +1,9 @@
-# Blueprint Authentik — Stage Email manquant.
-# L'instance n'a jamais eu de stage email par défaut (bootstrap via blueprints
-# uniquement, sans le flow-pack "default-recovery-flow" de l'image qui le
-# fournit habituellement) : System > Stages n'en listait aucun, rendant
-# impossible toute action "Email recovery link" depuis la fiche utilisateur,
-# même avec le SMTP Brevo correctement configuré.
-# use_global_settings: true => réutilise AUTHENTIK_EMAIL__* (Brevo) déjà
-# injectées dans authentik-server/worker, pas de doublon d'identifiants ici.
+# Blueprint Authentik — Stage Email (aucun n'existait sur l'instance).
+# use_global_settings: true => réutilise AUTHENTIK_EMAIL__* (Brevo) injectées
+# dans authentik-server/worker. Les autres champs (template, subject,
+# token_expiry) restent aux valeurs par défaut : leur format change selon les
+# versions (ex. token_expiry entier -> "minutes=30") et un format invalide fait
+# échouer la validation du blueprint en silence.
 version: 1
 metadata:
   name: cinestats-email-stage
@@ -17,6 +15,3 @@ entries:
     attrs:
       name: default-email-stage
       use_global_settings: true
-      token_expiry: 30
-      subject: "authentik"
-      template: email/password_reset.html
