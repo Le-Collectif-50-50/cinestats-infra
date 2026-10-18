@@ -15,3 +15,4 @@ entries:
     attrs:
       name: default-email-stage
       use_global_settings: true
+      subject: "CineStats — Réinitialisation de votre mot de passe"
