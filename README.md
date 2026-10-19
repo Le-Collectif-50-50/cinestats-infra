@@ -24,7 +24,7 @@ Ce repo gère **uniquement l'infra des 3 VPS-1** : services partagés, monitorin
 |---|---|---|
 | `traefik/` | VPS-1 Services | Reverse proxy partagé, TLS Let's Encrypt |
 | `monitoring/` | VPS-1 Services | Prometheus, Grafana, Bugsink, node-exporter, postgres-exporter |
-| `authentik/` | VPS-1 Services | SSO/OIDC (server, worker, PostgreSQL, Redis) |
+| `authentik/` | VPS-1 Services | SSO/OIDC (server, worker, PostgreSQL) |
 | `vaultwarden/` | VPS-1 Services | Gestionnaire de secrets Bitwarden-compatible |
 | `metabase/` | VPS-1 Metabase | Metabase + PostgreSQL interne + Traefik dédié |
 
@@ -86,7 +86,7 @@ docker compose up -d
 **Réseaux Docker — VPS-1 Services :**
 - `web` (externe) : Traefik + services exposés publiquement (Grafana, Bugsink, Authentik, Vaultwarden)
 - `monitoring-internal` (interne) : Prometheus + exporters, jamais exposé
-- `authentik-internal` (interne) : PostgreSQL + Redis d'Authentik, jamais exposé
+- `authentik-internal` (interne) : PostgreSQL d'Authentik, jamais exposé
 
 **Réseaux Docker — VPS-1 Metabase :**
 - `web` (bridge local) : Traefik + Metabase

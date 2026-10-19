@@ -1,17 +1,14 @@
 services:
   authentik-server:
-    image: ghcr.io/goauthentik/server:2025.4
+    image: ghcr.io/goauthentik/server:2026.8
     container_name: authentik-server
     restart: unless-stopped
     command: server
     depends_on:
       authentik-db:
         condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
-      - AUTHENTIK_REDIS__HOST=authentik-redis
       - AUTHENTIK_POSTGRESQL__HOST=authentik-db
       - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_DB_USER}
       - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD}
@@ -60,18 +57,15 @@ services:
       - authentik-internal
 
   authentik-worker:
-    image: ghcr.io/goauthentik/server:2025.4
+    image: ghcr.io/goauthentik/server:2026.8
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
     depends_on:
       authentik-db:
         condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
-      - AUTHENTIK_REDIS__HOST=authentik-redis
       - AUTHENTIK_POSTGRESQL__HOST=authentik-db
       - AUTHENTIK_POSTGRESQL__USER=${AUTHENTIK_DB_USER}
       - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD}
@@ -143,32 +137,8 @@ services:
     networks:
       - authentik-internal
 
-  authentik-redis:
-    image: redis:7-alpine
-    container_name: authentik-redis
-    restart: unless-stopped
-    volumes:
-      - authentik-redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 128m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - authentik-internal
-
 volumes:
   authentik-db-data:
-  authentik-redis-data:
 
 networks:
   web:

@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.7.8
+    image: traefik:v3.7.15
     container_name: metabase-traefik
     restart: unless-stopped
     ports:
@@ -32,7 +32,7 @@ services:
       - web
 
   metabase:
-    image: metabase/metabase:v0.53.8
+    image: metabase/metabase:v0.64.1
     container_name: metabase
     restart: unless-stopped
     depends_on:
@@ -117,7 +117,7 @@ services:
   # (Docker contournerait UFW sur des ports publiés). Scrapés par le Prometheus
   # du VPS Services (UFW restreint 9100/9187 à son IP).
   node-exporter:
-    image: prom/node-exporter:v1.9.1
+    image: prom/node-exporter:v1.12.1
     container_name: node-exporter
     restart: unless-stopped
     network_mode: host
@@ -142,7 +142,7 @@ services:
         max-file: "3"
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.17.1
+    image: prometheuscommunity/postgres-exporter:v0.20.1
     container_name: postgres-exporter
     restart: unless-stopped
     network_mode: host
