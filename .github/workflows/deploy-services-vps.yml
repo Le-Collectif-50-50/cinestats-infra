@@ -144,6 +144,6 @@ jobs:
           cd ~/cinestats-infra/vaultwarden
           docker compose up -d
           cd ~/cinestats-infra/authentik
-          docker compose up -d
+          docker compose up -d --remove-orphans   # supprime l'ancien authentik-redis (retiré depuis 2025.10)
           docker compose ps
           EOF
